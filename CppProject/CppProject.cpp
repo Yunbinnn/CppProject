@@ -1,117 +1,134 @@
 ﻿#include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
-#pragma region 함수포인터
-// 함수의 주소값을 저장하고 가리킬 수 있는 변수입니다.
+int life;
+int computer;
+int answer;
 
-/*
-void Delegate()
+void Init()
 {
-	printf("대리자~\n");
+	srand(time(NULL));
+
+	life = 5;
+	computer = rand() % 50 + 1;
 }
 
-int Add(int x, int y)
+void Update()
 {
-	return x + y;
+	printf("컴퓨터가 가지고 있는 값 : ");
+
+	scanf_s("%d", &answer);
 }
 
-int Substract(int x, int y)
+void Render()
 {
-	return x - y;
-}
+	if (computer == answer)
+	{
+		printf("\n게임에서 승리하였습니다.\n");
+		exit(1);
+	}
+	else if (computer > answer)
+	{
+		printf("\n컴퓨터가 가지고 있는 값보다 작습니다.\n");
+		life--;
+	}
+	else if (computer < answer)
+	{
+		printf("\n컴퓨터가 가지고 있는 값보다 큽니다.\n");
+		life--;
+	}
 
-int Multiple(int x, int y)
-{
-	return x * y;
+	if (life <= 0) 
+	{
+		printf("\n게임에서 패배하였습니다.\n");
+	}
 }
-
-int Divide(int x, int y)
-{
-	return x / y;
-}
-
-void Calculator(int x, int y, int(*cptr) (int, int))
-{
-	printf("*cptr 함수의 결과 : %d\n", cptr(x, y));
-}
-*/
-#pragma endregion
 
 int main()
 {
-
-#pragma region 함수 포인터 
-	// 함수 포인터는 함수의 반환형과 매개 변수의 타입이 일치해야 하며,
-	// 함수 포인터를 사용하여 동적으로 메모리를 할당할 수 없습니다.
+#pragma region 랜덤 함수
+	// 0 ~ 32767 사이의 난수 값을 반환하는 함수입니다.
 
 	/*
-	void (*fptr) ();
+	int seed = 0;
 
-	Calculator(1, 1, Add);
-	Calculator(20, 10, Substract);
-	Calculator(5, 5, Multiple);
-	Calculator(20, 20, Divide);
+	// 1970년 1월 1일 ~
+	srand(time(NULL));
 
-	fptr = Delegate;
-
-	fptr();
-	*/
-#pragma endregion
-
-#pragma region 소수 판별 알고리즘
-
-	/*
-	int number;
-	int count = 0;
-
-	printf("정수를 입력하세요 : ");
-
-	scanf_s("%d", &number);
-
-	printf("\n");
-
-	for (int i = 2; i <= number; i++)
+	for (int i = 0; i < 10; i++)
 	{
-		if (number % i == 0)
-			count++;
+		seed = rand() % 10 + 1;
+		printf("seed의 값 : %d\n", abs(seed));
 	}
-
-	printf("입력 받은 수 : %d\n\n", number);
-
-	if (count == 1)
-		printf("소수입니다.\n");
-	else
-		printf("소수가 아닙니다.\n");
 	*/
-
 #pragma endregion
 
-#pragma region 회문 판별 알고리즘
+#pragma region Up And Down
 
 	/*
-	const char* content = "AABB";
+	int rand_num;
+	int input;
+	int hp = 5;
+	int flag = 1;
 
-	int flag = 0;
-	int length = strlen(content);
+	srand(time(NULL));
+	rand_num = rand() % 50 + 1;
 
-	for (int i = 0; i < length / 2; i++)
+	while (flag)
 	{
-		if (content[i] == content[length - i - 1])
+		printf("숫자를 입력하세요 : ");
+		scanf_s("%d", &input);
+		printf("\n");
+
+		while (input < 1 || input > 50)
 		{
-			flag = 1;
+			printf("컴퓨터가 가진 범위 밖의 수 입니다.\n\n");
+			printf("다시 숫자를 입력하세요 : ");
+			scanf_s("%d", &input);
+			printf("\n");
 		}
-		else
+
+		if (input == rand_num)
 		{
+			printf("게임에서 승리하였습니다.\n\n");
 			flag = 0;
 			break;
 		}
-	}
 
-	if (flag == 1)
-		printf("회문입니다.\n");
-	else
-		printf("회문이 아닙니다.\n");
+		if (input > rand_num)
+		{
+			printf("현재 컴퓨터가 가지고 있는 값보다 큽니다.\n");
+			hp--;
+			printf("현재 남은 체력 : %d\n\n", hp);
+		}
+		else
+		{
+			printf("현재 컴퓨터가 가지고 있는 값보다 작습니다.\n\n");
+			hp--;
+			printf("현재 남은 체력 : %d\n\n", hp);
+		}
+
+		if (hp <= 0)
+		{
+			printf("게임에서 패배하였습니다.\n");
+			flag = 0;
+		}
+	}
 	*/
+
+	// 게임 데이터 초기화
+	Init();
+
+	while (life > 0)
+	{
+		// 게임 업데이트 함수
+		Update();
+
+		// 게임 렌더링 함수 
+		Render();
+	}
 
 #pragma endregion
 
