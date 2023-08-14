@@ -1,134 +1,167 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
+#include <conio.h>
+#include <Windows.h>
 #include <time.h>
-#include <math.h>
 
-int life;
-int computer;
-int answer;
+#define UP 72
+#define LEFT 75
+#define RIGHT 77
+#define DOWN 80
+#define ESCAPE 27
 
-void Init()
+void draw(int a[30][30])
 {
-	srand(time(NULL));
-
-	life = 5;
-	computer = rand() % 50 + 1;
+	for (int i = 0; i < 30; i++)
+	{
+		for (int j = 0; j < 30; j++)
+		{
+			if (a[i][j] == 0)//아직안열림
+				printf("■");
+			else if (a[i][j] == 1)//지뢰임
+				printf("※");
+			else if (a[i][j] == 2)//맞음
+				printf("●");
+		}
+		printf("\n");
+	}
 }
 
-void Update()
+void gotoXY(int x, int y)
 {
-	printf("컴퓨터가 가지고 있는 값 : ");
+	// x, y 좌표 설정
+	COORD position = { x, y };
 
-	scanf_s("%d", &answer);
-}
-
-void Render()
-{
-	if (computer == answer)
-	{
-		printf("\n게임에서 승리하였습니다.\n");
-		exit(1);
-	}
-	else if (computer > answer)
-	{
-		printf("\n컴퓨터가 가지고 있는 값보다 작습니다.\n");
-		life--;
-	}
-	else if (computer < answer)
-	{
-		printf("\n컴퓨터가 가지고 있는 값보다 큽니다.\n");
-		life--;
-	}
-
-	if (life <= 0) 
-	{
-		printf("\n게임에서 패배하였습니다.\n");
-	}
+	// 커서 이동
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), position);
 }
 
 int main()
 {
-#pragma region 랜덤 함수
-	// 0 ~ 32767 사이의 난수 값을 반환하는 함수입니다.
+#pragma region _kbhit() 함수
 
 	/*
-	int seed = 0;
+	char key = 0;
+	int x = 5;
+	int y = 5;
 
-	// 1970년 1월 1일 ~
-	srand(time(NULL));
-
-	for (int i = 0; i < 10; i++)
+	// Update( )
+	while (1)
 	{
-		seed = rand() % 10 + 1;
-		printf("seed의 값 : %d\n", abs(seed));
+		gotoXY(x, y);
+		printf("★");
+
+		if (_kbhit()) // 키보드 입력을 확인하는 함수
+		{
+			key = _getch();
+
+			if (key == -32)
+			{
+				key = _getch();
+			}
+
+			switch (key)
+			{
+			case ESCAPE: printf("\n프로그램 종료\n"); exit(1);
+				break;
+			case UP: if (y <= 0) break;
+				y--;
+				break;
+			case LEFT: if (x <= 0) break;
+				x--;
+				break;
+			case RIGHT: if (x >= 117) break;
+				x++;
+				break;
+			case DOWN: if (y >= 33)break;
+				y++;
+				break;
+			}
+
+			// 스크린을 지우는 함수
+			system("cls");
+		}
 	}
 	*/
+
 #pragma endregion
 
-#pragma region Up And Down
-
+#pragma region 지뢰
 	/*
-	int rand_num;
-	int input;
-	int hp = 5;
-	int flag = 1;
-
-	srand(time(NULL));
-	rand_num = rand() % 50 + 1;
-
-	while (flag)
+	int map[30][30];
+	int hide[30][30];
+	srand((unsigned)time(NULL));
+	int a, b, c, d, k;
+	for (int i = 0; i < 30; i++)//배열 모든값 0으로 해줌
 	{
-		printf("숫자를 입력하세요 : ");
-		scanf_s("%d", &input);
-		printf("\n");
-
-		while (input < 1 || input > 50)
+		for (int j = 0; j < 30; j++)
 		{
-			printf("컴퓨터가 가진 범위 밖의 수 입니다.\n\n");
-			printf("다시 숫자를 입력하세요 : ");
-			scanf_s("%d", &input);
-			printf("\n");
+			map[i][j] = 0;
+			hide[i][j] = 0;
+		}
+	}
+	printf("생성할 지뢰개수를 입력해주세요(30x30)\n");
+	scanf_s("%d", &k);
+	for (int i = 0; i < k; i++)//지뢰생성
+	{
+
+		while (1)
+		{
+			a = rand() % 30;
+			b = rand() % 30;
+			if (map[a][b] == 1)
+				;
+			else
+			{
+				map[a][b] = 1;
+				break;
+			}
 		}
 
-		if (input == rand_num)
+		map[a][b] = 1;
+
+	}
+	while (1)
+	{
+		draw(hide);
+		printf("x좌표입력: ");
+		scanf_s("%d", &c);
+		printf("y좌표입력: ");
+		scanf_s("%d", &d);
+
+		c--;
+		d--;
+
+		if (c >= 30 || d >= 30 || c < 0 || d < 0)
 		{
-			printf("게임에서 승리하였습니다.\n\n");
-			flag = 0;
+			printf("범위안의 숫자를입력해주세요\n");
+			Sleep(1000);
+		}
+		else if (map[c][d] == 1)
+		{
+			hide[c][d] = 1;
+			system("cls");
+			draw(hide);
+			printf("꽝입니다~ㅠㅠ\n");
+			Sleep(2000);
 			break;
 		}
-
-		if (input > rand_num)
+		else if (hide[c][d] == 2)
 		{
-			printf("현재 컴퓨터가 가지고 있는 값보다 큽니다.\n");
-			hp--;
-			printf("현재 남은 체력 : %d\n\n", hp);
+			printf("이미 방문했습니다^^\n");
 		}
-		else
+		else if (map[c][d] == 0)
 		{
-			printf("현재 컴퓨터가 가지고 있는 값보다 작습니다.\n\n");
-			hp--;
-			printf("현재 남은 체력 : %d\n\n", hp);
+			printf("맞았습니다~^^\n");
+			hide[c][d] = 2;
 		}
 
-		if (hp <= 0)
-		{
-			printf("게임에서 패배하였습니다.\n");
-			flag = 0;
-		}
+		Sleep(1000);
+		system("cls");
 	}
+	printf("지뢰위치\n");
+	draw(map);//게임 끝난후 지뢰위치 보여줌
 	*/
-
-	// 게임 데이터 초기화
-	Init();
-
-	while (life > 0)
-	{
-		// 게임 업데이트 함수
-		Update();
-
-		// 게임 렌더링 함수 
-		Render();
-	}
 
 #pragma endregion
 
