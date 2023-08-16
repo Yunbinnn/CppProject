@@ -29,5 +29,8 @@
     <ClInclude Include="(2023.08.11) 랜덤 함수.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="(2023.08.14) 키 입력 함수.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
