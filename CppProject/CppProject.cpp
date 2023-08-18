@@ -1,8 +1,10 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <conio.h>
 #include <Windows.h>
+#include <time.h>
 
 #define UP 72
 #define LEFT 75
@@ -10,28 +12,25 @@
 #define DOWN 80
 #define ESCAPE 27
 
-#pragma region 더블 버퍼링
-
-
-// HANDLE 인덱스에 접근해서 버퍼를 교체시키는 변수
-int screenIndex = 0;
-
-// 버퍼의 크기
-int width = 100;
-int height = 60;
-
-// 버퍼 생성
-HANDLE Screen[2];
-
-// [0] : Front Buffer
-// [1] : Back Buffer
-
 struct Player
 {
-	int x;
-	int y;
+	int x, y;
 	const char* shape;
 };
+
+struct Enemy
+{
+	int x, y;
+	const char* shape;
+};
+
+#pragma region 더블 버퍼링
+
+int width = 100, height = 60;
+
+HANDLE Screen[2];
+
+int screenIndex;
 
 // 버퍼를 초기화하는 함수
 void Init()
@@ -133,92 +132,146 @@ void ShowBuffer(int x, int y, const char* string)
 		NULL
 	);
 }
+
 #pragma endregion
+
+void Keyboard(Player* player)
+{
+	char key = 0;
+
+	if (_kbhit())
+	{
+		key = _getch();
+
+		if (key == -32)
+		{
+			key = _getch();
+		}
+
+		switch (key)
+		{
+		case ESCAPE: printf("\n프로그램 종료\n"); exit(1);
+			break;
+		case LEFT: if (player->x <= 0) return;
+			player->x -= 2;
+			break;
+		case RIGHT: if (player->x >= 28)return;
+			player->x += 2;
+			break;
+		}
+	}
+}
+
+int RandomX()
+{
+	srand(time(NULL));
+
+	int x = rand() % 31;
+
+	if (x % 2 == 1)
+	{
+		x += 1;
+	}
+
+	return x;
+}
+
+void gotoXY(int x, int y)
+{
+	// x, y 좌표 설정
+	COORD position = { x, y };
+
+	// 커서 이동
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), position);
+}
 
 int main()
 {
-#pragma region 더블 버퍼링
+#pragma region 문자열 관련 함수
 
+	// 문자열 길이 함수
 	/*
-	char key = 0;
+	const char* name = "James";
+	int result = strlen(name);
+	printf("result의 값 : %d\n", result);
+	*/
 
-	Player player = { 5, 5, "★" };
+	// 문자열 연결 함수
+	/*
+	char firstArr[20] = "First";
+	char secondArr[] = "Second";
 
-	// 1. 버퍼 초기화
+	strcat(firstArr, secondArr);
+
+	printf("firstArr의 값 : %s\n", firstArr);
+	*/
+
+	// 문자열 복사 함수
+	/*
+	char a[10] = { "String" };
+	char b[10];
+
+	// 첫 번째 매개변수 : 복사받을 문자 배열
+	// 두 번째 매개변수 : 복사할 문자 배열
+	strcpy(b, a);
+
+	printf("a의 문자열 : %s\n", a);
+	printf("b의 문자열 : %s\n", b);
+	*/
+
+	// 문자열 비교 함수
+	/*
+	char firstA[] = { "ABC" };
+	char secondB[] = { "ABC" };
+
+	// 서로 같으면 "0"
+	// 앞쪽에 있는 값이 크면 "1"
+	// 뒤쪽에 있는 값이 크면 "-1"
+
+	printf("두 문자열을 비교한 결과 : %d\n", strcmp(firstA, secondB));
+	*/
+
+#pragma endregion
+
+#pragma region 똥피하기
+
+	system("mode con cols=30 lines=25");
+
+	Player player = { 4, 24, "■" };
+
+	Enemy enemy = { RandomX(), 0, "▼" };
+
 	Init();
 
 	while (1)
 	{
-		if (_kbhit()) // 키보드 입력을 확인하는 함수
+		Keyboard(&player);
+
+		if (enemy.y >= 25)
 		{
-			key = _getch();
-
-			if (key == -32)
-			{
-				key = _getch();
-			}
-
-			switch (key)
-			{
-			case ESCAPE: printf("\n프로그램 종료\n"); exit(1);
-				break;
-			case UP: if (player.y <= 0) break;
-				player.y--;
-				break;
-			case LEFT: if (player.x <= 1) break;
-				player.x -= 2;
-				break;
-			case RIGHT:	if (player.x >= 117) break;
-				player.x += 2;
-				break;
-			case DOWN: if (player.y >= 29)break;
-				player.y++;
-				break;
-			}
+			enemy.y = 0;
+			enemy.x = RandomX();
 		}
 
-		ShowBuffer(player.x, player.y, player.shape);
+		if (player.x == enemy.x && player.y == enemy.y)
+		{
+			break;
+			printf("게임 오버\n");
+			exit(1);
+		}
 
-		// 2. 버퍼 교체
-		Flipping();
+		gotoXY(enemy.x, enemy.y++);
+		printf("%s", enemy.shape);
 
-		// 3. 교체된 버퍼의 내용을 삭제합니다.
-		Clear();
+		gotoXY(player.x, player.y);
+		printf("%s", player.shape);
+
+		Sleep(100);
+
+		system("cls");
 	}
-
-	// 4. 버퍼를 해제합니다.
-	ReleaseScreen();
-	*/
-#pragma endregion
-
-#pragma region 최대 공약수
-
-	/*
-	int x, y;
-
-	int result = 0;
-	int result2 = 0;
-
-	printf("정수를 입력하세요. : ");
-
-	scanf_s("%d %d", &x, &y);
-
-	printf("\n");
-
-	for (int i = 1; i <= x && i <= y; i++)
-	{
-		if (x % i == 0 && y % i == 0)
-			result = i;
-	}
-
-	printf("%d와 %d의 최대 공약수 : %d\n", x, y, result);
-
-	result2 = (x * y) / result;
-
-	printf("\n%d와 %d의 최대 공배수 : %d\n", x, y, result2);
-	*/
-
 #pragma endregion
 
 	return 0;
 }
+
