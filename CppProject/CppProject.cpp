@@ -6,31 +6,72 @@
 #include <Windows.h>
 #include <time.h>
 
+#define WIDTH 11
+#define HEIGHT 11
+
 #define UP 72
 #define LEFT 75
 #define RIGHT 77
 #define DOWN 80
 #define ESCAPE 27
 
+// 미로 맵 데이터
+char maze[WIDTH][HEIGHT];
+
+// 버퍼의 크기
+int width = 100;
+int height = 60;
+
+HANDLE Screen[2];
+
+int screenIndex = 0;
+
+// 플레이어 데이터
 struct Player
 {
 	int x, y;
 	const char* shape;
 };
 
-struct Enemy
+// 미로 생성 함수
+void CreateMaze()
 {
-	int x, y;
-	const char* shape;
-};
+	// 0 : 빈 공간 ("  ")
+	// 1 : 벽	  ("■")
+	// 2 : 탈출구  ("◎")
 
-#pragma region 더블 버퍼링
+	strcpy(maze[0], "1111111111");
+	strcpy(maze[1], "1001000101");
+	strcpy(maze[2], "1100010001");
+	strcpy(maze[3], "1111011111");
+	strcpy(maze[4], "1000000001");
+	strcpy(maze[5], "1011110111");
+	strcpy(maze[6], "1110000101");
+	strcpy(maze[7], "1000111101");
+	strcpy(maze[8], "1010000001");
+	strcpy(maze[9], "1110111011");
+	strcpy(maze[10], "1111111211");
+}
 
-int width = 100, height = 60;
+// 화면에 미로를 렌더링
+void Renderer()
+{
+	for (int i = 0; i < WIDTH; i++)
+	{
+		for (int j = 0; j < HEIGHT; j++)
+		{
+			if (maze[i][j] == '0')
+				printf("  ");
 
-HANDLE Screen[2];
+			if (maze[i][j] == '1')
+				printf("■");
 
-int screenIndex;
+			if (maze[i][j] == '2')
+				printf("◎");
+		}
+		printf("\n");
+	}
+}
 
 // 버퍼를 초기화하는 함수
 void Init()
@@ -133,9 +174,8 @@ void ShowBuffer(int x, int y, const char* string)
 	);
 }
 
-#pragma endregion
-
-void Keyboard(Player* player)
+// 키보드 입력 함수
+void Keyboard(char map[WIDTH][HEIGHT], Player* player)
 {
 	char key = 0;
 
@@ -151,31 +191,31 @@ void Keyboard(Player* player)
 		switch (key)
 		{
 		case ESCAPE: printf("\n프로그램 종료\n"); exit(1);
-			break;
-		case LEFT: if (player->x <= 0) return;
+		case LEFT: if (map[player->y][player->x / 2 - 1] != '1')
+		{
 			player->x -= 2;
-			break;
-		case RIGHT: if (player->x >= 28)return;
+		}
+				 break;
+		case RIGHT: if (map[player->y][player->x / 2 + 1] != '1')
+		{
 			player->x += 2;
-			break;
+		}
+				  break;
+		case UP:  if (map[player->y - 1][player->x / 2] != '1')
+		{
+			player->y--;
+		}
+			   break;
+		case DOWN: if (map[player->y + 1][player->x / 2] != '1')
+		{
+			player->y++;
+		}
+				 break;
 		}
 	}
 }
 
-int RandomX()
-{
-	srand(time(NULL));
-
-	int x = rand() % 31;
-
-	if (x % 2 == 1)
-	{
-		x += 1;
-	}
-
-	return x;
-}
-
+// 키 입력에 따른 플레이어 좌표 이동 함수
 void gotoXY(int x, int y)
 {
 	// x, y 좌표 설정
@@ -187,91 +227,34 @@ void gotoXY(int x, int y)
 
 int main()
 {
-#pragma region 문자열 관련 함수
+	Player player = { 1, 1, "★" };
 
-	// 문자열 길이 함수
-	/*
-	const char* name = "James";
-	int result = strlen(name);
-	printf("result의 값 : %d\n", result);
-	*/
+	player.x++;
 
-	// 문자열 연결 함수
-	/*
-	char firstArr[20] = "First";
-	char secondArr[] = "Second";
+	CreateMaze();
 
-	strcat(firstArr, secondArr);
-
-	printf("firstArr의 값 : %s\n", firstArr);
-	*/
-
-	// 문자열 복사 함수
-	/*
-	char a[10] = { "String" };
-	char b[10];
-
-	// 첫 번째 매개변수 : 복사받을 문자 배열
-	// 두 번째 매개변수 : 복사할 문자 배열
-	strcpy(b, a);
-
-	printf("a의 문자열 : %s\n", a);
-	printf("b의 문자열 : %s\n", b);
-	*/
-
-	// 문자열 비교 함수
-	/*
-	char firstA[] = { "ABC" };
-	char secondB[] = { "ABC" };
-
-	// 서로 같으면 "0"
-	// 앞쪽에 있는 값이 크면 "1"
-	// 뒤쪽에 있는 값이 크면 "-1"
-
-	printf("두 문자열을 비교한 결과 : %d\n", strcmp(firstA, secondB));
-	*/
-
-#pragma endregion
-
-#pragma region 똥피하기
-
-	system("mode con cols=30 lines=25");
-
-	Player player = { 4, 24, "■" };
-
-	Enemy enemy = { RandomX(), 0, "▼" };
 
 	Init();
 
 	while (1)
 	{
-		Keyboard(&player);
+		Renderer();
 
-		if (enemy.y >= 25)
-		{
-			enemy.y = 0;
-			enemy.x = RandomX();
-		}
+		Keyboard(maze, &player);
 
-		if (player.x == enemy.x && player.y == enemy.y)
-		{
-			break;
-			printf("게임 오버\n");
-			exit(1);
-		}
-
-		gotoXY(enemy.x, enemy.y++);
-		printf("%s", enemy.shape);
-
-		gotoXY(player.x, player.y);
 		printf("%s", player.shape);
 
-		Sleep(100);
+		ShowBuffer(player.x, player.y, player.shape);
 
-		system("cls");
+		// 2. 버퍼 교체
+		Flipping();
+
+		// 3. 교체된 버퍼의 내용을 삭제합니다.
+		Clear();
 	}
-#pragma endregion
+
+	// 4. 버퍼를 해제합니다.
+	ReleaseScreen();
 
 	return 0;
 }
-
