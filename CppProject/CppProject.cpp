@@ -18,14 +18,6 @@
 // 미로 맵 데이터
 char maze[WIDTH][HEIGHT];
 
-// 버퍼의 크기
-int width = 100;
-int height = 60;
-
-HANDLE Screen[2];
-
-int screenIndex = 0;
-
 // 플레이어 데이터
 struct Player
 {
@@ -73,107 +65,6 @@ void Renderer()
 	}
 }
 
-// 버퍼를 초기화하는 함수
-void Init()
-{
-	CONSOLE_CURSOR_INFO cursor;
-
-	// 버퍼의 가로 사이즈, 세로 사이즈
-	COORD size = { width,height };
-
-	// LEFT, TOP, RIGHT, BOTTOM
-	SMALL_RECT rect = { 0,0,width - 1,height - 1 };
-
-	// 화면 2개를 생성합니다.
-	// FRONT BUFFER
-	Screen[0] = CreateConsoleScreenBuffer
-	(
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		NULL,
-		CONSOLE_TEXTMODE_BUFFER,
-		NULL
-	);
-
-	SetConsoleScreenBufferSize(Screen[0], size);
-
-	SetConsoleWindowInfo(Screen[0], TRUE, &rect);
-
-	// BACK BUFFER
-	Screen[1] = CreateConsoleScreenBuffer
-	(
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		NULL,
-		CONSOLE_TEXTMODE_BUFFER,
-		NULL
-	);
-
-	SetConsoleScreenBufferSize(Screen[1], size);
-
-	SetConsoleWindowInfo(Screen[1], TRUE, &rect);
-
-	// 커서의 활성화 여부
-	// false : 거짓
-	// true : 참
-	cursor.bVisible = false;
-
-	SetConsoleCursorInfo(Screen[0], &cursor);
-	SetConsoleCursorInfo(Screen[1], &cursor);
-}
-
-// 버퍼를 교체하는 함수
-void Flipping()
-{
-	// 버퍼는 하나만 활성화 시킬 수 있습니다.
-	SetConsoleActiveScreenBuffer(Screen[screenIndex]);
-
-	screenIndex = !screenIndex;
-}
-
-// 교체된 버퍼를 지워주는 함수
-void Clear()
-{
-	COORD coord = { 0, };
-
-	DWORD dw;
-
-	FillConsoleOutputCharacter
-	(
-		Screen[screenIndex],
-		' ',
-		width * height,
-		coord,
-		&dw
-	);
-}
-
-// 버퍼를 해제하는 함수
-void ReleaseScreen()
-{
-	CloseHandle(Screen[0]);
-	CloseHandle(Screen[1]);
-}
-
-// 버퍼를 이용해서 출력하는 함수
-void ShowBuffer(int x, int y, const char* string)
-{
-	COORD cursorPosition = { x,y };
-
-	DWORD dw;
-
-	SetConsoleCursorPosition(Screen[screenIndex], cursorPosition);
-
-	WriteFile
-	(
-		Screen[screenIndex],
-		string,
-		strlen(string),
-		&dw,
-		NULL
-	);
-}
-
 // 키보드 입력 함수
 void Keyboard(char map[WIDTH][HEIGHT], Player* player)
 {
@@ -191,23 +82,52 @@ void Keyboard(char map[WIDTH][HEIGHT], Player* player)
 		switch (key)
 		{
 		case ESCAPE: printf("\n프로그램 종료\n"); exit(1);
+			break;
 		case LEFT: if (map[player->y][player->x / 2 - 1] != '1')
 		{
+			if (map[player->y][player->x / 2 - 1] == '2')
+			{
+				player->x -= 2;
+				printf("\n탈출 성공!\n");
+				exit(1);
+			}
+
 			player->x -= 2;
 		}
 				 break;
 		case RIGHT: if (map[player->y][player->x / 2 + 1] != '1')
 		{
+			if (map[player->y][player->x / 2 + 1] == '2')
+			{
+				player->x += 2;
+				printf("\n탈출 성공!\n");
+				exit(1);
+			}
+
 			player->x += 2;
 		}
 				  break;
 		case UP:  if (map[player->y - 1][player->x / 2] != '1')
 		{
+			if (map[player->y - 1][player->x / 2] == '2')
+			{
+				player->y--;
+				printf("\n탈출 성공!\n");
+				exit(1);
+			}
+
 			player->y--;
 		}
 			   break;
 		case DOWN: if (map[player->y + 1][player->x / 2] != '1')
 		{
+			if (map[player->y + 1][player->x / 2] == '2')
+			{
+				player->y++;
+				printf("\n탈출 성공!\n");
+				exit(1);
+			}
+
 			player->y++;
 		}
 				 break;
@@ -233,28 +153,21 @@ int main()
 
 	CreateMaze();
 
-
-	Init();
-
 	while (1)
 	{
 		Renderer();
 
 		Keyboard(maze, &player);
 
+		gotoXY(player.x, player.y);
+
 		printf("%s", player.shape);
 
-		ShowBuffer(player.x, player.y, player.shape);
+		Sleep(100);
 
-		// 2. 버퍼 교체
-		Flipping();
-
-		// 3. 교체된 버퍼의 내용을 삭제합니다.
-		Clear();
+		system("cls");
 	}
 
-	// 4. 버퍼를 해제합니다.
-	ReleaseScreen();
 
 	return 0;
 }
